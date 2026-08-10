@@ -1,24 +1,20 @@
 import { test, expect } from '@playwright/test';
+import { LoginPage } from './pages/LoginPage';
 
-test.describe('SauceDemo Login', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('https://www.saucedemo.com/');
+
+  test('standard user can log in', async ({ page}) => {
+     const loginPage = new LoginPage(page);
+     await loginPage.goto();
+     await loginPage.login('standard_user', 'secret_sauce');
+     
+     await expect(page).toHaveURL(/inventory.html/);
   });
-  test('standard user can log in', async ({ page}) =>{
-      await page.getByPlaceholder('Username').fill('standard_user');
-      await page.getByPlaceholder('Password').fill('secret_sauce');
-      await page.getByRole('button', { name: 'Login' }).click();
-
-      await expect(page).toHaveURL(/inventory.html/);
-      await expect(page.locator('.title')).toHaveText('Products');
-  })
 
   test('locked out user sees error', async ({ page }) => {
-    await page.getByPlaceholder('Username').fill('locked_out_user');
-    await page.getByPlaceholder('Password').fill('secret_sauce');
-    await page.getByRole('button', { name: 'Login' }).click();
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login('locked_out_user', 'secret_sauce');
 
-    await expect(page.locator('[data-test="error"]')).toContainText('locked out');
-
+    await expect(loginPage.errorMessage).toBeVisible();
+    await expect(loginPage.errorMessage).toHaveText('Epic sadface: Sorry, this user has been locked out.');
   });
-});
